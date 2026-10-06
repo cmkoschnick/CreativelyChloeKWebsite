@@ -1,262 +1,234 @@
 /*
-	Editorial by HTML5 UP
-	html5up.net | @ajlkn
-	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+    Editorial by HTML5 UP
+    html5up.net | @ajlkn
+    Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
 */
 
-(function($) {
 
-	var	$window = $(window),
-		$head = $('head'),
-		$body = $('body');
+/*
+    Load Header
+*/
 
-	// Breakpoints.
-		breakpoints({
-			xlarge:   [ '1281px',  '1680px' ],
-			large:    [ '981px',   '1280px' ],
-			medium:   [ '737px',   '980px'  ],
-			small:    [ '481px',   '736px'  ],
-			xsmall:   [ '361px',   '480px'  ],
-			xxsmall:  [ null,      '360px'  ],
-			'xlarge-to-max':    '(min-width: 1681px)',
-			'small-to-xlarge':  '(min-width: 481px) and (max-width: 1680px)'
-		});
+document.addEventListener("DOMContentLoaded", function () {
 
-	// Stops animations/transitions until the page has ...
+    fetch("includes/header.html")
+        .then(function (response) {
 
-		// ... loaded.
-			$window.on('load', function() {
-				window.setTimeout(function() {
-					$body.removeClass('is-preload');
-				}, 100);
-			});
+            if (!response.ok) {
+                throw new Error(
+                    "Could not load header.html. Status: " + response.status
+                );
+            }
 
-		// ... stopped resizing.
-			var resizeTimeout;
+            return response.text();
 
-			$window.on('resize', function() {
+        })
+        .then(function (html) {
 
-				// Mark as resizing.
-					$body.addClass('is-resizing');
+            var placeholder = document.getElementById("header-placeholder");
 
-				// Unmark after delay.
-					clearTimeout(resizeTimeout);
+            if (!placeholder) {
+                console.error("ERROR: #header-placeholder was not found.");
+                return;
+            }
 
-					resizeTimeout = setTimeout(function() {
-						$body.removeClass('is-resizing');
-					}, 100);
+            // Insert header + sidebar
+            placeholder.innerHTML = html;
 
-			});
 
-	// Fixes.
+            /*
+                Hamburger Menu
+            */
 
-		// Object fit images.
-			if (!browser.canUse('object-fit')
-			||	browser.name == 'safari')
-				$('.image.object').each(function() {
+            var menuToggle = document.getElementById("menu-toggle");
+            var sidebar = document.getElementById("sidebar");
 
-					var $this = $(this),
-						$img = $this.children('img');
+            if (!menuToggle || !sidebar) {
+                console.error("ERROR: Menu button or sidebar was not found.");
+                return;
+            }
 
-					// Hide original image.
-						$img.css('opacity', '0');
+            menuToggle.addEventListener("click", function (event) {
 
-					// Set background.
-						$this
-							.css('background-image', 'url("' + $img.attr('src') + '")')
-							.css('background-size', $img.css('object-fit') ? $img.css('object-fit') : 'cover')
-							.css('background-position', $img.css('object-position') ? $img.css('object-position') : 'center');
+                event.stopPropagation();
 
-				});
+                sidebar.classList.toggle("menu-open");
 
-	// Sidebar.
-		var $sidebar = $('#sidebar'),
-			$sidebar_inner = $sidebar.children('.inner');
+                var isOpen = sidebar.classList.contains("menu-open");
 
-		// Inactive by default on <= large.
-			breakpoints.on('<=large', function() {
-				$sidebar.addClass('inactive');
-			});
+                menuToggle.setAttribute(
+                    "aria-expanded",
+                    isOpen ? "true" : "false"
+                );
 
-			breakpoints.on('>large', function() {
-				$sidebar.removeClass('inactive');
-			});
+            });
 
-		// Hack: Workaround for Chrome/Android scrollbar position bug.
-			if (browser.os == 'android'
-			&&	browser.name == 'chrome')
-				$('<style>#sidebar .inner::-webkit-scrollbar { display: none; }</style>')
-					.appendTo($head);
 
-		// Toggle.
-			$('<a href="#sidebar" class="toggle">Toggle</a>')
-				.appendTo($sidebar)
-				.on('click', function(event) {
+            /*
+                Close Menu When Clicking Outside
+            */
 
-					// Prevent default.
-						event.preventDefault();
-						event.stopPropagation();
+            document.addEventListener("click", function (event) {
 
-					// Toggle.
-						$sidebar.toggleClass('inactive');
+                if (
+                    sidebar.classList.contains("menu-open") &&
+                    !sidebar.contains(event.target) &&
+                    !menuToggle.contains(event.target)
+                ) {
 
-				});
+                    sidebar.classList.remove("menu-open");
 
-		// Events.
+                    menuToggle.setAttribute(
+                        "aria-expanded",
+                        "false"
+                    );
 
-			// Link clicks.
-				$sidebar.on('click', 'a', function(event) {
+                }
 
-					// >large? Bail.
-						if (breakpoints.active('>large'))
-							return;
+            });
 
-					// Vars.
-						var $a = $(this),
-							href = $a.attr('href'),
-							target = $a.attr('target');
 
-					// Prevent default.
-						event.preventDefault();
-						event.stopPropagation();
+            /*
+                Projects Submenu
+            */
 
-					// Check URL.
-						if (!href || href == '#' || href == '')
-							return;
+            var menu = document.getElementById("menu");
 
-					// Hide sidebar.
-						$sidebar.addClass('inactive');
+            if (menu) {
 
-					// Redirect to href.
-						setTimeout(function() {
+                var menuOpeners = menu.querySelectorAll(".opener");
 
-							if (target == '_blank')
-								window.open(href);
-							else
-								window.location.href = href;
+                menuOpeners.forEach(function (opener) {
 
-						}, 500);
+                    opener.addEventListener("click", function (event) {
 
-				});
+                        event.preventDefault();
 
-			// Prevent certain events inside the panel from bubbling.
-				$sidebar.on('click touchend touchstart touchmove', function(event) {
+                        menuOpeners.forEach(function (otherOpener) {
 
-					// >large? Bail.
-						if (breakpoints.active('>large'))
-							return;
+                            if (otherOpener !== opener) {
+                                otherOpener.classList.remove("active");
+                            }
 
-					// Prevent propagation.
-						event.stopPropagation();
+                        });
 
-				});
+                        opener.classList.toggle("active");
 
-			// Hide panel on body click/tap.
-				$body.on('click touchend', function(event) {
+                    });
 
-					// >large? Bail.
-						if (breakpoints.active('>large'))
-							return;
+                });
 
-					// Deactivate.
-						$sidebar.addClass('inactive');
+            }
 
-				});
+        })
+        .catch(function (error) {
 
-		// Scroll lock.
-		// Note: If you do anything to change the height of the sidebar's content, be sure to
-		// trigger 'resize.sidebar-lock' on $window so stuff doesn't get out of sync.
+            console.error("HEADER ERROR:", error);
 
-			$window.on('load.sidebar-lock', function() {
+        });
 
-				var sh, wh, st;
+});
 
-				// Reset scroll position to 0 if it's 1.
-					if ($window.scrollTop() == 1)
-						$window.scrollTop(0);
 
-				$window
-					.on('scroll.sidebar-lock', function() {
+/*
+    Editorial JavaScript
+*/
 
-						var x, y;
+(function ($) {
 
-						// <=large? Bail.
-							if (breakpoints.active('<=large')) {
+    var $window = $(window),
+        $head = $('head'),
+        $body = $('body');
 
-								$sidebar_inner
-									.data('locked', 0)
-									.css('position', '')
-									.css('top', '');
 
-								return;
+    /*
+        Breakpoints
+    */
 
-							}
+    breakpoints({
+        xlarge: ['1281px', '1680px'],
+        large: ['981px', '1280px'],
+        medium: ['737px', '980px'],
+        small: ['481px', '736px'],
+        xsmall: ['361px', '480px'],
+        xxsmall: [null, '360px'],
+        'xlarge-to-max': '(min-width: 1681px)',
+        'small-to-xlarge': '(min-width: 481px) and (max-width: 1680px)'
+    });
 
-						// Calculate positions.
-							x = Math.max(sh - wh, 0);
-							y = Math.max(0, $window.scrollTop() - x);
 
-						// Lock/unlock.
-							if ($sidebar_inner.data('locked') == 1) {
+    /*
+        Stops animations/transitions until the page has loaded
+    */
 
-								if (y <= 0)
-									$sidebar_inner
-										.data('locked', 0)
-										.css('position', '')
-										.css('top', '');
-								else
-									$sidebar_inner
-										.css('top', -1 * x);
+    $window.on('load', function () {
 
-							}
-							else {
+        window.setTimeout(function () {
 
-								if (y > 0)
-									$sidebar_inner
-										.data('locked', 1)
-										.css('position', 'fixed')
-										.css('top', -1 * x);
+            $body.removeClass('is-preload');
 
-							}
+        }, 100);
 
-					})
-					.on('resize.sidebar-lock', function() {
+    });
 
-						// Calculate heights.
-							wh = $window.height();
-							sh = $sidebar_inner.outerHeight() + 30;
 
-						// Trigger scroll.
-							$window.trigger('scroll.sidebar-lock');
+    /*
+        Stops transitions while resizing
+    */
 
-					})
-					.trigger('resize.sidebar-lock');
+    var resizeTimeout;
 
-				});
+    $window.on('resize', function () {
 
-	// Menu.
-		var $menu = $('#menu'),
-			$menu_openers = $menu.children('ul').find('.opener');
+        $body.addClass('is-resizing');
 
-		// Openers.
-			$menu_openers.each(function() {
+        clearTimeout(resizeTimeout);
 
-				var $this = $(this);
+        resizeTimeout = setTimeout(function () {
 
-				$this.on('click', function(event) {
+            $body.removeClass('is-resizing');
 
-					// Prevent default.
-						event.preventDefault();
+        }, 100);
 
-					// Toggle.
-						$menu_openers.not($this).removeClass('active');
-						$this.toggleClass('active');
+    });
 
-					// Trigger resize (sidebar lock).
-						$window.triggerHandler('resize.sidebar-lock');
 
-				});
+    /*
+        Object-fit image fix
+    */
 
-			});
+    if (
+        !browser.canUse('object-fit') ||
+        browser.name == 'safari'
+    ) {
+
+        $('.image.object').each(function () {
+
+            var $this = $(this),
+                $img = $this.children('img');
+
+            $img.css('opacity', '0');
+
+            $this
+                .css(
+                    'background-image',
+                    'url("' + $img.attr('src') + '")'
+                )
+                .css(
+                    'background-size',
+                    $img.css('object-fit')
+                        ? $img.css('object-fit')
+                        : 'cover'
+                )
+                .css(
+                    'background-position',
+                    $img.css('object-position')
+                        ? $img.css('object-position')
+                        : 'center'
+                );
+
+        });
+
+    }
 
 })(jQuery);
