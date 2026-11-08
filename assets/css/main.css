@@ -3554,3 +3554,8 @@ header.major h2 {
     text-align: center;
     z-index: 2;
 }
+
+.color-block {
+    background-color: var(--ck-cream);
+    /* color: var(--ck-dark-green); */
+}
